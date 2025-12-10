@@ -1,0 +1,42 @@
+<?php
+// No se puede crear como un relate porque Aos_Products_quotes no es un modulo del sistema
+$dictionary["Case"]["fields"]['aos_products_quotes_id'] = array(
+    'required' => false,
+    'name' => 'aos_products_quotes_id',
+    'vname' => 'LBL_AOS_PRODUCTS_QUOTES_ID',
+    'type' => 'char',
+    'massupdate' => 0,
+    'no_default' => false,
+    'comments' => '',
+    'help' => '',
+    'importable' => 'true',
+    'duplicate_merge' => 'disabled',
+    'duplicate_merge_dom_value' => 0,
+    'audited' => true,
+    'inline_edit' => false,
+    'reportable' => true,
+    'unified_search' => false,
+    'merge_filter' => 'disabled',
+    'len' => 36,
+    'size' => '20',
+);
+
+$dictionary["Case"]["fields"]['aos_products_quotes_name'] = array(
+    'required' => false,
+    'name' => 'aos_products_quotes_name',
+    'vname' => 'LBL_AOS_PRODUCTS_QUOTES_NAME',
+    'type' => 'varchar',
+    'massupdate' => 0,
+    'no_default' => false,
+    'comments' => '',
+    'help' => '',
+    'importable' => 'true',
+    'duplicate_merge' => 'disabled',
+    'duplicate_merge_dom_value' => 0,
+    'audited' => true,
+    'inline_edit' => false,
+    'reportable' => true,
+    'unified_search' => false,
+    'merge_filter' => 'disabled',
+    'len' => 255,
+);

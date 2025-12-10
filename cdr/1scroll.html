@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>Layout</title>
+<!--[if IE]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+}
+.wrapper {
+  height: 100%;
+}
+.header, .footer {
+  height: 50px;
+  background: silver;
+}
+.content {
+  height: calc(100% - 100px);
+  overflow: auto;
+  background: pink;
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">Header</div>
+  <div class="content">
+    <div style="height:1000px;">Content</div>
+  </div>
+  <div class="footer">Footer</div>
+</div>	
+</body>
+</html>

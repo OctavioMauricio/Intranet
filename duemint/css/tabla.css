@@ -1,0 +1,348 @@
+@charset "UTF-8";
+/* ==========================================================
+   CSS - INFORME DUEMINT / FORMATO TNA
+   Autor: Mauricio Araneda
+   Fecha: 2025-11-04 (VersiÃ³n optimizada full width)
+   ========================================================== */
+
+/* --- ESTRUCTURA GENERAL --- */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #1F1D3E;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+}
+
+/* --- CONTENEDOR DE TABLA SCROLLEABLE --- */
+#tablaContainer {
+  flex: 1;                       /* ocupa el alto restante */
+  overflow-y: auto;
+  overflow-x: auto;              /* permite ver columnas completas */
+  width: 100%;                   /* ðŸ”¥ ANCHO TOTAL */
+  margin: 0;
+  padding: 0 6px;                /* margen interno */
+  border: 1px solid #555;
+  border-radius: 5px;
+  background-color: #19173C;
+  box-sizing: border-box;
+}
+
+/* --- TABLA DUEMINT --- */
+#tablaDuemint {
+  width: 100%;
+  max-width: none;               /* ðŸ”¥ no colapsar ancho */
+  table-layout: auto;            /* ðŸ”¥ permite ancho basado en contenido */
+  border-collapse: collapse;
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* --- ENCABEZADOS FIJOS --- */
+#tablaDuemint thead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background-color: #512554;
+}
+
+#tablaDuemint th {
+  background-color: #512554;
+  color: #C39BD3;
+  font-size: 13px;
+  text-align: center;
+  padding: 6px 4px;
+  white-space: nowrap;            /* evita que colapsen tÃ­tulos */
+  border-bottom: 1px solid #64466E;
+}
+
+#tablaDuemint th:first-child {
+  border-top-left-radius: 4px;
+}
+
+#tablaDuemint th:last-child {
+  border-top-right-radius: 4px;
+}
+
+/* --- FILTROS DE COLUMNA --- */
+#tablaDuemint tr.filters th {
+  background-color: #3A2C4A;
+  padding: 3px;
+}
+
+.filter-input {
+  width: 95%;
+  padding: 3px;
+  font-size: 12px;
+  border: 1px solid #C39BD3;
+  border-radius: 4px;
+  background-color: #2C2C4A;
+  color: #EAECEE;
+  text-align: center;
+}
+
+.filter-input::placeholder {
+  color: #9C9C9C;
+  font-style: italic;
+  font-size: 11px;
+}
+
+.filter-input:focus {
+  background-color: #fff;
+  color: #000;
+  outline: none;
+  border-color: #64C2C8;
+}
+
+/* --- FILAS Y CELDAS --- */
+#tablaDuemint td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #555;
+  white-space: nowrap;           /* ðŸ”¥ mantiene todo visible */
+  overflow: visible;             /* ðŸ”¥ NO OCULTA CONTENIDO */
+  text-overflow: clip;
+}
+
+#tablaDuemint tr:nth-child(even) {
+  background-color: #1F1D3E;
+}
+
+#tablaDuemint tr:nth-child(odd) {
+  background-color: #283747;
+}
+
+#tablaDuemint tr:hover {
+  background-color: #2E4053;
+}
+
+/* --- FORMATO DE MONTOS (columna Docs + Monto) --- */
+#tablaDuemint td:nth-child(7) {
+  text-align: right;
+  font-family: "Courier New", monospace;
+  font-weight: 600;
+  color: #FFD966;
+}
+
+/* --- TOTALES --- */
+#tablaDuemint tfoot td {
+  background-color: #512554;
+  color: #fff;
+  font-weight: bold;
+  border-top: 2px solid #C39BD3;
+  padding: 8px;
+  text-align: right;
+}
+
+/* --- ENLACES --- */
+#tablaDuemint a {
+  color: #76D7C4;
+  text-decoration: none;
+}
+
+#tablaDuemint a:hover {
+  text-decoration: underline;
+  color: #C39BD3;
+}
+
+/* ==========================================================
+   BARRA DE BOTONES FIJA SOBRE EL FOOTER
+   ========================================================== */
+#barra-botones {
+  flex-shrink: 0;
+  height: 26px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 12px;
+  background-color: #1F1D3E;
+  border-top: 1px solid #512554;
+  z-index: 10;
+}
+
+#btnLimpiarFiltros, #btnExportarXLS {
+  background-color: #512554;
+  color: #fff;
+  border: 1px solid #C39BD3;
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  height: 26px;
+  line-height: 1;
+}
+
+#btnLimpiarFiltros:hover {
+  background-color: #C39BD3;
+  color: #1F1D3E;
+  border-color: #512554;
+  transform: scale(1.05);
+}
+
+/* ==========================================================
+   SELECT ESTADO SWEET — HEREDA COLOR DE LA FILA
+   ========================================================== */
+.estado-sweet {
+    background-color: transparent !important;   /* ← hereda el color del <tr> */
+    color: white;
+    border: 1px solid #512554;
+    border-radius: 4px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    padding: 2px 4px;
+    width: 60%;
+    box-sizing: border-box;
+    text-align: left;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+/* Opciones del menú desplegable */
+.estado-sweet option {
+    background-color: #1F1D3E;  /* menú desplegable oscuro */
+    color: white;
+}
+
+.estado-sweet:hover,
+.estado-sweet:focus {
+  background-color: #2E4053;
+  outline: none;
+  border-color: #C39BD3;
+}
+
+.estado-icono {
+  display: inline-block;
+  width: 15%;
+  text-align: left;
+  font-size: 16px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+/* ==========================================================
+   ðŸ”¥ CONTROL TOTAL DE ANCHO DE COLUMNAS PARA TABLA DUEMINT
+   ========================================================== */
+
+#tablaDuemint {
+  table-layout: fixed !important; /* ðŸ”¥ Obligatorio para que respeten ancho */
+}
+
+/* # */
+#tablaDuemint th:nth-child(1),
+#tablaDuemint td:nth-child(1) {
+  width: 40px;
+}
+
+/* RUT */
+#tablaDuemint th:nth-child(2),
+#tablaDuemint td:nth-child(2) {
+  width: 110px;
+}
+
+/* RazÃ³n Social */
+#tablaDuemint th:nth-child(3),
+#tablaDuemint td:nth-child(3) {
+  width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Estado Sweet */
+#tablaDuemint th:nth-child(4),
+#tablaDuemint td:nth-child(4) {
+  width: 130px;
+}
+
+/* Comentario Estado */
+#tablaDuemint th:nth-child(5),
+#tablaDuemint td:nth-child(5) {
+  width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tipo */
+#tablaDuemint th:nth-child(6),
+#tablaDuemint td:nth-child(6) {
+  width: 80px;
+}
+
+/* Docs */
+#tablaDuemint th:nth-child(7),
+#tablaDuemint td:nth-child(7) {
+  width: 70px;
+}
+
+/* Monto */
+#tablaDuemint th:nth-child(8),
+#tablaDuemint td:nth-child(8) {
+  width: 120px;
+  white-space: nowrap;
+}
+
+/* Fecha Ref */
+#tablaDuemint th:nth-child(9),
+#tablaDuemint td:nth-child(9) {
+  width: 110px;
+}
+
+/* DÃ­as */
+#tablaDuemint th:nth-child(10),
+#tablaDuemint td:nth-child(10) {
+  width: 65px;
+  font-weight: bold;
+}
+
+/* Ver Duemint */
+#tablaDuemint th:nth-child(11),
+#tablaDuemint td:nth-child(11) {
+  width: 85px;
+  white-space: nowrap;
+}
+/* Alinear columna Estado Sweet a la izquierda */
+#tablaDuemint td.estado-sweet-cell {
+    text-align: left !important;
+}
+/* Alinear columna Estado Sweet a la izquierda */
+#tablaDuemint td.estado-sweet-cell {
+    text-align: left !important;
+}
+
+/* Alinear el contenedor interno (flex) a la izquierda */
+#tablaDuemint td.estado-sweet-cell .estado-container {
+    justify-content: flex-start !important;
+    gap: 6px; /* opcional, para separar el icono */
+}
+
+/* Evitar que el select se estire */
+#tablaDuemint td.estado-sweet-cell .estado-sweet {
+    width: auto !important;
+}
+
+.comentario-icono {
+    display: inline-block;
+    min-width: 18px;
+    margin-left: 6px;
+    font-size: 16px;
+}
+/* Permitir mostrar iconos en Estado Sweet y Comentario Estado */
+#tablaDuemint td.estado-sweet-cell,
+#tablaDuemint td.comentario-estado-cell {
+    overflow: visible !important;
+}
+
+.estado-icono,
+.comentario-icono {
+    display: inline-block !important;
+    font-size: 18px !important;
+    margin-left: 6px;
+}

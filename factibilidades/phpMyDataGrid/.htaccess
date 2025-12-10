@@ -1,0 +1,10 @@
+# Permitir acceso público a los ejemplos
+<IfModule mod_authz_core.c>
+  Require all granted
+</IfModule>
+
+# Permitir listar el contenido (opcional)
+Options +Indexes
+
+# Asegurar que PHP se ejecute correctamente
+AddType application/x-httpd-php .php
