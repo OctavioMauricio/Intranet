@@ -56,3 +56,6 @@ _notes/
 
 # macOS
 .DS_Store
+
+# Claude CLI
+claude-cli/

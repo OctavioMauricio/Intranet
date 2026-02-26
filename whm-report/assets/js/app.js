@@ -898,8 +898,28 @@ const App = {
                     <div class="modal-item-value">${this.formatNumber(acct.email_count || '0')} / ${acct.email_limit === 'unlimited' ? 'Ilimitada' : (this.formatNumber(acct.email_limit) || 'Ilimitada')}</div>
                 </div>
                 <div class="modal-item">
-                    <div class="modal-item-label">Owner</div>
-                    <div class="modal-item-value">${acct.owner || 'N/A'}</div>
+                    <div class="modal-item-label">Reseller (Owner)</div>
+                    <div class="modal-item-value">
+                        ${(() => {
+                const owner = acct.owner || 'root';
+                const resellers = this._resellers && this._resellers.length > 0
+                    ? this._resellers.map(r => r.name)
+                    : (this.data.owners ? this.data.owners.map(o => o.name).filter(n => n !== 'root') : []);
+
+                if (resellers.length === 0) {
+                    return `<span style="color:var(--text-muted)">root</span> <a href="#" onclick="App.switchTab('resellers'); App.closeModal(); return false;" style="color:var(--accent); font-size:11px; margin-left:8px; text-decoration:underline;">+ Crear Reseller</a>`;
+                }
+
+                let options = `<option value="root" ${owner === 'root' ? 'selected' : ''}>root (Servidor)</option>`;
+                resellers.forEach(r => {
+                    options += `<option value="${r}" ${owner === r ? 'selected' : ''}>${r}</option>`;
+                });
+
+                return `<select onchange="App.reassignAccount('${user}', this.value)" style="width:100%; padding:4px 8px; background:var(--bg-input); border:1px solid var(--border); border-radius:6px; color:var(--text-primary); font-size:13px">
+                    ${options}
+                </select>`;
+            })()}
+                    </div>
                 </div>
             </div>
             

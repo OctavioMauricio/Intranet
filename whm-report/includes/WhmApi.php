@@ -772,8 +772,15 @@ class WhmApi {
         
         $hasUnlimitedDisk = false;
         $accountsData = [];
+        $ownerCounts = [];
         
         foreach ($accounts as $acct) {
+            $owner = $acct['owner'] ?? 'root';
+            if (!isset($ownerCounts[$owner])) {
+                $ownerCounts[$owner] = 0;
+            }
+            $ownerCounts[$owner]++;
+            
             $user = $acct['user'];
             $diskUsedRaw = $this->parseSize($acct['diskused'] ?? '0M');
             $diskLimitRaw = $this->parseSize($acct['disklimit'] ?? 'unlimited');
@@ -872,6 +879,20 @@ class WhmApi {
         $sysDisk = $this->getSystemDiskUsage();
         $serverInfo = $this->getServerInfo();
         
+        // Preparar lista de dueños para el filtro
+        $owners = [];
+        foreach ($ownerCounts as $name => $count) {
+            $owners[] = [
+                'name' => $name,
+                'count' => $count
+            ];
+        }
+        usort($owners, function($a, $b) {
+            if ($a['name'] === 'root') return -1;
+            if ($b['name'] === 'root') return 1;
+            return strcmp($a['name'], $b['name']);
+        });
+
         return [
             'summary' => [
                 'total_accounts' => $totalAccounts,
@@ -889,6 +910,7 @@ class WhmApi {
                 'generated_at' => date('Y-m-d H:i:s'),
             ],
             'accounts' => $accountsData,
+            'owners' => $owners,
             'server' => $serverInfo
         ];
     }
