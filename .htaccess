@@ -1,5 +1,10 @@
 
 
+# Archivos públicos (sin autenticación)
+<Files "apps_arbol.html">
+    Require all granted
+</Files>
+
 # php -- BEGIN cPanel-generated handler, do not edit
 # Set the “ea-php70” package as the default “PHP” programming language.
 <IfModule mime_module>

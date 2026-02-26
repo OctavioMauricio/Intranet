@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Árbol de Aplicaciones - Intranet iConTel</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 40px;
+      line-height: 1.8;
+    }
+    h1 {
+      font-family: Arial, sans-serif;
+      color: #89b4fa;
+      border-bottom: 2px solid #89b4fa;
+      padding-bottom: 10px;
+      margin-bottom: 30px;
+    }
+    h2 {
+      font-family: Arial, sans-serif;
+      color: #a6e3a1;
+      margin-top: 30px;
+      margin-bottom: 5px;
+      font-size: 1em;
+    }
+    .tree {
+      background: #181825;
+      border-radius: 10px;
+      padding: 30px 40px;
+      white-space: pre;
+      font-size: 0.95em;
+      overflow-x: auto;
+    }
+    .section-crm     { color: #89b4fa; }
+    .section-modulos { color: #a6e3a1; }
+    .section-integ   { color: #f9e2af; }
+    .section-infra   { color: #f38ba8; }
+    .section-app     { color: #cba6f7; }
+    .section-shared  { color: #94e2d5; }
+    .comment         { color: #6c7086; }
+    .meta {
+      font-family: Arial, sans-serif;
+      font-size: 0.85em;
+      color: #6c7086;
+      margin-top: 30px;
+      border-top: 1px solid #313244;
+      padding-top: 15px;
+    }
+    @media print {
+      body { background: white; color: black; padding: 20px; }
+      .tree { background: #f5f5f5; color: black; border: 1px solid #ccc; }
+      .section-crm, .section-modulos, .section-integ,
+      .section-infra, .section-app, .section-shared { color: black; font-weight: bold; }
+      .comment { color: #666; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📁 Árbol de Aplicaciones — Intranet iConTel</h1>
+
+  <div class="tree"><span class="section-shared">intranet/</span>
+<span class="section-crm">├── 🔵 CRM / SuiteCRM</span>
+│   ├── sweet/                       <span class="comment"># SuiteCRM iConTel (on-premise)</span>
+│   ├── sweet_entry_point/           <span class="comment"># Entry point SuiteCRM iConTel</span>
+│   ├── sweet_respaldo/              <span class="comment"># Respaldo SuiteCRM</span>
+│   ├── sweet_temp/                  <span class="comment"># Temporal SuiteCRM</span>
+│   ├── api_sweet/                   <span class="comment"># API para SuiteCRM iConTel</span>
+│   ├── crm/                         <span class="comment"># SuiteCRM TNA Office (on-premise)</span>
+│   └── Sweet Cambios/               <span class="comment"># Historial de cambios SuiteCRM</span>
+│
+<span class="section-modulos">├── 🟢 Módulos iConTel</span>
+│   ├── alarmas/                     <span class="comment"># Módulo de alarmas</span>
+│   ├── calls/ calls_office/         <span class="comment"># Gestión de llamadas</span>
+│   ├── cartera/                     <span class="comment"># Cartera de clientes</span>
+│   ├── casos/ casos_office/         <span class="comment"># Gestión de casos</span>
+│   ├── cdr/ cdr_new/                <span class="comment"># CDR telefonía</span>
+│   ├── clientes/ clientes_admin/    <span class="comment"># Clientes</span>
+│   ├── comisiones/ comisiones_new/  <span class="comment"># Comisiones</span>
+│   ├── cotizaciones/ cotizaciones_office/ <span class="comment"># Cotizaciones</span>
+│   ├── factibilidades/              <span class="comment"># Factibilidades</span>
+│   ├── facturas/                    <span class="comment"># Facturas</span>
+│   ├── fotovoltaico/                <span class="comment"># Módulo fotovoltaico</span>
+│   ├── kickoff_icontel/             <span class="comment"># Kickoff (dev y producción)</span>
+│   │   kickoff_icontel_dev/
+│   │   kickoff_office/
+│   ├── notas_de_venta/              <span class="comment"># Notas de venta</span>
+│   ├── oportunidades/               <span class="comment"># Oportunidades</span>
+│   ├── productos/                   <span class="comment"># Productos</span>
+│   ├── servicios_activos/           <span class="comment"># Servicios activos</span>
+│   │   servicios_activos_office/
+│   └── tareas/                      <span class="comment"># Tareas</span>
+│
+<span class="section-integ">├── 🟡 Integraciones</span>
+│   ├── apibsale/ bsale/ bsale_api/  <span class="comment"># Integración BSale</span>
+│   ├── duemint/                     <span class="comment"># Integración Duemint</span>
+│   ├── cta_cte_duemint/             <span class="comment"># Cuenta corriente Duemint</span>
+│   ├── cta_cte_duemint_py/          <span class="comment"># Cuenta corriente Duemint (Python)</span>
+│   ├── tarifas_telefonicas/         <span class="comment"># Tarifas telefónicas</span>
+│   └── telefonia/                   <span class="comment"># Telefonía</span>
+│
+<span class="section-infra">├── 🔴 Infraestructura / DevOps</span>
+│   ├── whm/ whm-report/             <span class="comment"># WHM / reportes</span>
+│   ├── zabbix/                      <span class="comment"># Zabbix monitoreo</span>
+│   ├── server-checkup/              <span class="comment"># Chequeo de servidores</span>
+│   └── rkhunter/                    <span class="comment"># Detección de rootkits</span>
+│
+<span class="section-app">├── 🟣 App / APIs</span>
+│   ├── app/                         <span class="comment"># App móvil / API general</span>
+│   ├── bitacora/                    <span class="comment"># Bitácora</span>
+│   ├── coti/                        <span class="comment"># Cotizador</span>
+│   ├── eventos/                     <span class="comment"># Eventos</span>
+│   ├── inventario/ inventario_new/  <span class="comment"># Inventario</span>
+│   └── reconciliacion_facturacion/  <span class="comment"># Reconciliación de facturación</span>
+│
+<span class="section-shared">└── ⚙️ Compartido</span>
+    ├── css/ js/ images/             <span class="comment"># Assets globales</span>
+    ├── header/ footer/              <span class="comment"># Plantillas comunes</span>
+    ├── includes/ class/             <span class="comment"># Librerías y clases PHP</span>
+    └── meta_data/                   <span class="comment"># Metadatos globales</span>
+</div>
+
+  <div class="meta">
+    Generado el 2026-02-26 · Intranet iConTel · TNA Group
+  </div>
+
+</body>
+</html>
