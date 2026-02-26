@@ -1125,6 +1125,9 @@ const App = {
             } else if (sortKey === 'suspended_incoming') {
                 va = parseInt(a.suspended_incoming || 0);
                 vb = parseInt(b.suspended_incoming || 0);
+            } else if (sortKey === 'forwarder_count') {
+                va = parseInt(a.forwarder_count || 0);
+                vb = parseInt(b.forwarder_count || 0);
             }
             return sortDir === 'asc' ? va - vb : vb - va;
         });
@@ -1235,20 +1238,19 @@ const App = {
                 'style="padding:3px 7px;border:none;border-radius:5px;cursor:pointer;font-size:11px;margin-left:3px;' +
                 'background:rgba(220,53,69,0.12);color:var(--danger)">🗑️</button>';
 
-            var fwdBtn = '<button title="Forwardear email" ' +
-                'onclick="App.showForwarders(\'' + emailAddr + '\')" ' +
-                'style="padding:3px 7px;border:none;border-radius:5px;cursor:pointer;font-size:11px;margin-left:3px;' +
-                'background:rgba(108,92,231,0.12);color:#a29bfe">➡️ Fwd</button>';
-            var displayQuota = (e.humandiskquota || e.diskquota || 'Ilimitada');
-            if (displayQuota === 'None' || displayQuota === 'unlimited') displayQuota = 'Ilimitada';
+            var fwdIndicator = (e.forwarder_count > 0) ? '<span title="' + e.forwarder_count + ' reenvío(s)" style="cursor:help;margin-left:4px">↗️</span>' : '';
+            var fwdCell = '<td class="td-mono" style="text-align:center">' +
+                (e.forwarder_count > 0 ? '<span class="badge badge-info" style="cursor:pointer" onclick="App.showForwarders(\'' + emailAddr + '\')">' + e.forwarder_count + '</span>' : '<span style="color:var(--text-muted)">0</span>') +
+                '</td>';
 
             rows +=
                 '<tr id="emailrow-' + rowIdx + '">' +
                 '<td style="color:var(--text-muted);font-size:11px;font-family:var(--font-mono);text-align:center;width:36px">' + this.formatNumber(start + i + 1) + '</td>' +
-                '<td class="td-mono">' + (e.email || e.login || 'N/A') + statusHtml + '</td>' +
+                '<td class="td-mono">' + (e.email || e.login || 'N/A') + statusHtml + fwdIndicator + '</td>' +
                 '<td class="td-mono">' + (e.humandiskused || '0') + ' ' + barHtml + '</td>' +
                 '<td class="td-mono">' + displayQuota + '</td>' +
                 '<td class="td-mono">' + this.formatNumber(e.diskusedpercent || 0) + '%</td>' +
+                fwdCell +
                 '<td style="white-space:nowrap">' +
                 (isLoginSuspended ? '<span class="badge badge-suspended">🔒 Suspendido</span>' : '<span class="badge badge-active">🔓 Activo</span>') +
                 '</td>' +
@@ -1293,6 +1295,7 @@ const App = {
             '<th style="cursor:pointer" onclick="App.sortEmailTable(\'_diskused\')">Disco Usado' + arrow('_diskused') + '</th>' +
             '<th style="cursor:pointer" onclick="App.sortEmailTable(\'diskquota\')">Quota' + arrow('diskquota') + '</th>' +
             '<th>% Uso</th>' +
+            '<th style="cursor:pointer" onclick="App.sortEmailTable(\'forwarder_count\')" title="Ordenar por Reenvíos">Reenvíos' + arrow('forwarder_count') + '</th>' +
             '<th style="cursor:pointer" onclick="App.sortEmailTable(\'suspended_login\')" title="Ordenar por Login">Login' + arrow('suspended_login') + '</th>' +
             '<th style="cursor:pointer" onclick="App.sortEmailTable(\'suspended_incoming\')" title="Ordenar por Entrada">Entrada' + arrow('suspended_incoming') + '</th>' +
             '<th style="cursor:pointer" onclick="App.sortEmailTable(\'mtime\')">Última Actividad' + arrow('mtime') + '</th>' +
@@ -1458,7 +1461,7 @@ const App = {
         }
     },
 
-    async showForwarders(email) {
+    async showForwarders(email, forceOpen = false) {
         // Usar la fila emaillog para mostrar el panel de forwarders
         var targetRow = null;
         var emailRows = document.querySelectorAll('[id^="emailrow-"]');
@@ -1472,7 +1475,7 @@ const App = {
         if (!targetRow) return;
 
         var td = targetRow.querySelector('td');
-        if (targetRow.style.display !== 'none' && targetRow.style.display !== '' && td.getAttribute('data-mode') === 'fwd') {
+        if (!forceOpen && targetRow.style.display !== 'none' && targetRow.style.display !== '' && td.getAttribute('data-mode') === 'fwd') {
             targetRow.style.display = 'none';
             return;
         }
@@ -1550,6 +1553,21 @@ const App = {
             if (data.success) {
                 if (msgEl) msgEl.innerHTML = '<span style="color:var(--accent)">✅ Forwarder agregado.</span>';
                 if (input) input.value = '';
+
+                // Actualizar contador local
+                if (this.modalEmails) {
+                    var me = this.modalEmails.find(function (m) { return (m.email || m.login) === email; });
+                    if (me) {
+                        me.forwarder_count = (parseInt(me.forwarder_count || 0)) + 1;
+                        // Forzar re-render de la tabla para ver el nuevo contador
+                        var dataContainer = document.getElementById('emailTableData');
+                        if (dataContainer) {
+                            dataContainer.innerHTML = this.renderEmailTable(this.modalEmails);
+                            this.showForwarders(email, true);
+                        }
+                    }
+                }
+
                 this._loadFwd(email, rowId);
             } else {
                 if (msgEl) msgEl.innerHTML = '<span style="color:var(--danger)">❌ ' + (data.message || 'Error') + '</span>';
@@ -1573,6 +1591,21 @@ const App = {
             var data = await res.json();
             if (data.success) {
                 if (msgEl) msgEl.innerHTML = '<span style="color:var(--accent)">✅ Eliminado.</span>';
+
+                // Actualizar contador local
+                if (this.modalEmails) {
+                    var me = this.modalEmails.find(function (m) { return (m.email || m.login) === email; });
+                    if (me) {
+                        me.forwarder_count = Math.max(0, (parseInt(me.forwarder_count || 0)) - 1);
+                        // Forzar re-render de la tabla para ver el nuevo contador
+                        var dataContainer = document.getElementById('emailTableData');
+                        if (dataContainer) {
+                            dataContainer.innerHTML = this.renderEmailTable(this.modalEmails);
+                            this.showForwarders(email, true);
+                        }
+                    }
+                }
+
                 this._loadFwd(email, rowId);
             } else {
                 if (msgEl) msgEl.innerHTML = '<span style="color:var(--danger)">❌ ' + (data.message || 'Error') + '</span>';
@@ -1816,13 +1849,13 @@ const App = {
         // Emails
         if (d.emails && d.emails.length > 0) {
             html += '<h3>Cuentas de Email</h3><table border="1">';
-            html += '<thead><tr><th>Email</th><th>Disco Usado</th><th>Disco Límite</th><th>% Uso</th><th>Último Acceso</th><th>Login Suspendido</th><th>Entrante Suspendido</th></tr></thead><tbody>';
+            html += '<thead><tr><th>Email</th><th>Disco Usado</th><th>Disco Límite</th><th>% Uso</th><th>Reenvíos</th><th>Último Acceso</th><th>Login Suspendido</th><th>Entrante Suspendido</th></tr></thead><tbody>';
             d.emails.forEach(e => {
                 var loginSusp = parseInt(e.suspended_login || 0) ? 'Sí' : 'No';
                 var incSusp = parseInt(e.suspended_incoming || 0) ? 'Sí' : 'No';
                 var mt = parseInt(e.mtime || 0);
                 var lastAccess = mt > 0 ? this.formatDateTime(mt * 1000) : 'Sin acceso registrado';
-                html += '<tr><td>' + (e.email || '') + '</td><td>' + (e._diskused || '0') + ' MB</td><td>' + (e._diskquota || '0') + ' MB</td><td>' + (e._diskused_percent || '0') + '%</td><td>' + lastAccess + '</td><td>' + loginSusp + '</td><td>' + incSusp + '</td></tr>';
+                html += '<tr><td>' + (e.email || '') + '</td><td>' + (e._diskused || '0') + ' MB</td><td>' + (e._diskquota || '0') + ' MB</td><td>' + (e._diskused_percent || '0') + '%</td><td>' + (e.forwarder_count || 0) + '</td><td>' + lastAccess + '</td><td>' + loginSusp + '</td><td>' + incSusp + '</td></tr>';
             });
             html += '</tbody></table><br>';
         }

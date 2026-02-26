@@ -58,6 +58,21 @@ try {
             $autoresponders = $whm->getAutoResponders($user);
             $mailingLists = $whm->getMailingLists($user);
             
+            if (is_array($emails) && is_array($forwarders)) {
+                $fwdCounts = [];
+                foreach ($forwarders as $f) {
+                    $src = $f['dest'] ?? ''; // In list_forwarders, 'dest' is the source email strangely, or 'uri'
+                    if (empty($src)) $src = $f['uri'] ?? '';
+                    if (!empty($src)) {
+                        $fwdCounts[$src] = ($fwdCounts[$src] ?? 0) + 1;
+                    }
+                }
+                foreach ($emails as &$e) {
+                    $fullEmail = ($e['email'] ?? $e['login'] ?? '');
+                    $e['forwarder_count'] = $fwdCounts[$fullEmail] ?? 0;
+                }
+            }
+
             echo json_encode([
                 'account' => array_merge($summary, [
                     'email_count' => is_array($emails) ? count($emails) : 0,
