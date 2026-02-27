@@ -960,7 +960,7 @@ class WhmApi {
     }
 
 /**
- * Calcula la severidad de una cuenta basada en la Política TNA v1.0
+ * Calcula la severidad de una cuenta basada en la Política Corporativa v2.0
  */
 private function calculateAccountSeverity($data) {
     if ($data['suspended']) {
@@ -974,9 +974,9 @@ private function calculateAccountSeverity($data) {
     $MAILBOX_15GB = 15 * 1024 * 1024 * 1024;
 
     // Determinar si es cuenta Gerencial (Limit > 4GB) o Estándar
-    $isManagerial = ($diskLimitBytes > 4 * 1024 * 1024 * 1024) || ($diskLimitBytes == 0); // 0 = Ilimitado (treat as Managerial for safety)
+    $isManagerial = ($diskLimitBytes > 4 * 1024 * 1024 * 1024) || ($diskLimitBytes == 0); // 0 = Ilimitado
     
-    // Umbrales de Inodos TNA
+    // Umbrales de Inodos TNA (se mantienen como métrica complementaria)
     $inodeThresholds = $isManagerial ? [
         'yellow' => 100000,
         'orange' => 150000,
@@ -987,28 +987,28 @@ private function calculateAccountSeverity($data) {
         'red'    => 120000
     ];
 
-    // Nivel Emergencia (🚨)
-    if ($disk >= 95) {
-        return ['level' => 'emergency', 'class' => 'emergency', 'label' => 'Emergencia', 'code' => '🚨'];
+    // 1. SATURADO (⚫ / 🚨) - 96% a 100%+
+    if ($disk >= 96 || $mailbox >= (0.95 * $MAILBOX_15GB)) {
+        return ['level' => 'emergency', 'class' => 'emergency', 'label' => 'Saturado', 'code' => '🚨'];
     }
 
-    // Nivel Critico (🔴)
-    if ($disk >= 90 || $inodesUsed >= $inodeThresholds['red'] || $mailbox >= $MAILBOX_15GB) {
+    // 2. CRÍTICO (🔴) - 86% a 95%
+    if ($disk >= 86 || $inodesUsed >= $inodeThresholds['red'] || $mailbox >= (0.90 * $MAILBOX_15GB)) {
         return ['level' => 'critical', 'class' => 'red', 'label' => 'Crítico', 'code' => '🔴'];
     }
 
-    // Nivel Alto (🟠)
-    if ($disk >= 85 || $inodesUsed >= $inodeThresholds['orange']) {
-        return ['level' => 'high', 'class' => 'orange', 'label' => 'Riesgo Alto', 'code' => '🟠'];
+    // 3. ADVERTENCIA (🟠) - 76% a 85%
+    if ($disk >= 76 || $inodesUsed >= $inodeThresholds['orange']) {
+        return ['level' => 'high', 'class' => 'orange', 'label' => 'Advertencia', 'code' => '🟠'];
     }
 
-    // Nivel Preventivo (🟡)
-    if ($disk >= 75 || $inodesUsed >= $inodeThresholds['yellow'] || $mailbox >= (0.8 * $MAILBOX_15GB)) {
+    // 4. PREVENTIVO (🟡) - 61% a 75%
+    if ($disk >= 61 || $inodesUsed >= $inodeThresholds['yellow'] || $mailbox >= (0.8 * $MAILBOX_15GB)) {
         return ['level' => 'preventive', 'class' => 'yellow', 'label' => 'Preventivo', 'code' => '🟡'];
     }
 
-    // Nivel Informativo (🟢)
-    return ['level' => 'info', 'class' => 'green', 'label' => 'Sano', 'code' => '🟢'];
+    // 5. SALUDABLE (🟢) - 0% a 60%
+    return ['level' => 'info', 'class' => 'green', 'label' => 'Saludable', 'code' => '🟢'];
 }
     
     /**

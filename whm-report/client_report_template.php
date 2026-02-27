@@ -68,8 +68,17 @@ $inodeRed    = $isManagerial ? 200000 : 120000;
 
 $inodeStatusClass = 'status-healthy';
 if ($inodesUsed >= $inodeRed) $inodeStatusClass = 'status-critical';
-elseif ($inodesUsed >= $inodeOrange) $inodeStatusClass = 'status-warning';
-elseif ($inodesUsed >= $inodeYellow) $inodeStatusClass = 'status-warning';
+elseif ($inodesUsed >= $inodeOrange) $inodeStatusClass = 'status-warning-orange';
+elseif ($inodesUsed >= $inodeYellow) $inodeStatusClass = 'status-warning-yellow';
+
+// Nueva lógica de color de estado centralizada (Política v2.0)
+function getPolicyColorClass($percent) {
+    if ($percent >= 96) return 'status-saturated';
+    if ($percent >= 86) return 'status-critical';
+    if ($percent >= 76) return 'status-warning-orange';
+    if ($percent >= 61) return 'status-warning-yellow';
+    return 'status-healthy';
+}
 
 $emailPercent = 0;
 if ($emailLimit > 0 && is_numeric($emailLimit)) {
@@ -106,17 +115,31 @@ if (is_array($fwdData)) {
     }
 }
 
+$emailCount = count($emails); // Sincronizar con el listado real de la UAPI
+$emailPercent = 0;
+if ($emailLimit > 0 && is_numeric($emailLimit)) {
+    $emailPercent = min(100, round(($emailCount / $emailLimit) * 100, 2));
+}
+
 $totalEmailDiskBytes = 0;
 foreach ($emails as $email) {
     $totalEmailDiskBytes += floatval($email['_diskused'] ?? 0);
 }
 
-// Ordenar emails de mayor a menor uso (capacidad)
+// Ordenar emails de mayor a menor uso (%)
 usort($emails, function($a, $b) {
-    return floatval($b['_diskused'] ?? 0) <=> floatval($a['_diskused'] ?? 0);
+    $pctA = floatval($a['diskusedpercent'] ?? ($a['_diskquota'] > 0 ? ($a['_diskused'] / $a['_diskquota']) * 100 : 0));
+    $pctB = floatval($b['diskusedpercent'] ?? ($b['_diskquota'] > 0 ? ($b['_diskused'] / $b['_diskquota']) * 100 : 0));
+    if ($pctA == $pctB) {
+        return floatval($b['_diskused'] ?? 0) <=> floatval($a['_diskused'] ?? 0);
+    }
+    return $pctB <=> $pctA;
 });
 
-$isHealthy = !$isSuspended && $diskPercent < 80 && $emailPercent < 80 && $bwPercent < 80;
+// La severidad viene calculada desde el backend (Política v2.0)
+$severity = $accountData['severity'] ?? ['level' => 'info', 'class' => 'green', 'label' => 'Saludable', 'code' => '🟢'];
+
+$isHealthy = $severity['level'] === 'info';
 
 $maxMailboxBytes = 0;
 foreach ($emails as $email) {
@@ -124,7 +147,8 @@ foreach ($emails as $email) {
     if ($ebytes > $maxMailboxBytes) $maxMailboxBytes = $ebytes;
 }
 
-$isCriticalMigration = !$isSuspended && ($diskPercent >= 80 || $maxMailboxBytes >= 15 * 1024 * 1024 * 1024 || $inodesUsed >= $inodeRed);
+$isCriticalMigration = !in_array($severity['level'], ['info', 'preventive']);
+$isSaturated = ($severity['level'] === 'emergency');
 
 // Alertas de Mantenimiento
 $suspendedEmails = [];
@@ -139,6 +163,49 @@ foreach ($emails as $email) {
         $inactiveEmails[] = $email['email'];
     }
 }
+
+// Mapeo de Recomendaciones según Política Corporativa v2.0
+$policyRecommendations = [
+    'suspended' => [
+        'title' => 'SERVICIO SUSPENDIDO',
+        'msg' => 'Tu cuenta de alojamiento se encuentra actualmente suspendida. Por favor contáctanos lo antes posible para restablecer el servicio.',
+        'class' => 'bg-red-600 text-white shadow-lg shadow-red-200',
+        'icon' => '🔒'
+    ],
+    'info' => [
+        'title' => '¡Tu cuenta está en excelente estado!',
+        'msg' => 'Actualmente la cuenta está activa y tienes recursos suficientes para que tu sitio web y correos funcionen sin problemas.',
+        'class' => 'bg-green-50 border-green-200 text-green-800',
+        'icon' => '🟢'
+    ],
+    'preventive' => [
+        'title' => 'Estado: Preventivo',
+        'msg' => 'Hemos detectado que su almacenamiento alcanza el ' . $diskPercent . '%. Para evitar interrupciones futuras, recomendamos una limpieza preventiva de correos antiguos o archivos temporales.',
+        'class' => 'bg-yellow-50 border-yellow-200 text-yellow-800',
+        'icon' => '🟡'
+    ],
+    'high' => [
+        'title' => 'Atención: Advertencia de Riesgo',
+        'msg' => 'Su uso de disco está en ' . $diskPercent . '%. Existe riesgo de saturación en el corto plazo. Recomendamos evaluar una ampliación de cuota o un archivado masivo de información.',
+        'class' => 'bg-orange-50 border-orange-200 text-orange-800',
+        'icon' => '🟠'
+    ],
+    'critical' => [
+        'title' => 'ALERTA: Acción Inmediata Requerida',
+        'msg' => 'Umbral crítico alcanzado (' . $diskPercent . '%). Existe un riesgo inminente de rebote de correos y pérdida de comunicación comercial. Es necesaria una optimización urgente o ampliación de plan.',
+        'class' => 'bg-red-50 border-red-200 text-red-800',
+        'icon' => '🔴'
+    ],
+    'emergency' => [
+        'title' => 'ESTADO: SATURADO / RIESGO OPERATIVO',
+        'msg' => 'SERVICIO AFECTADO. La saturación (' . $diskPercent . '%) puede causar errores 500, rebotes de correos entrantes y fallas en aplicaciones. Se requiere escalamiento técnico y ampliación urgente.',
+        'class' => 'bg-slate-900 border-red-600 text-white shadow-xl',
+        'icon' => '🚨'
+    ]
+];
+
+$recKey = $isSuspended ? 'suspended' : ($severity['level'] ?? 'info');
+$currentRecommendation = $policyRecommendations[$recKey] ?? $policyRecommendations['info'];
 
 // Auditoría de Política TNA de Forwarders
 $fwdLoops = [];
@@ -167,8 +234,33 @@ $suspendedEmailsCount = count(array_unique($suspendedEmails));
 $inactiveEmailsCount = count($inactiveEmails);
 $noTraffic = ($bwUsedBytes <= 0);
 
-$hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 || $noTraffic || $fwdLoopsCount > 0 || $fwdExternalCount > 0;
+// Conteo de estados de correos para "la caluga"
+$emailStats = [
+    'healthy'   => ['count' => 0, 'label' => 'Saludable',   'emoji' => '🟢', 'class' => 'status-healthy', 'text' => 'text-white'],
+    'preventive' => ['count' => 0, 'label' => 'Preventivo', 'emoji' => '🟡', 'class' => 'status-warning-yellow', 'text' => 'text-slate-800'],
+    'warning'    => ['count' => 0, 'label' => 'Advertencia', 'emoji' => '🟠', 'class' => 'status-warning-orange', 'text' => 'text-white'],
+    'critical'   => ['count' => 0, 'label' => 'Crítico',    'emoji' => '🔴', 'class' => 'status-critical', 'text' => 'text-white'],
+    'saturated'  => ['count' => 0, 'label' => 'Saturado',   'emoji' => '🚨', 'class' => 'status-saturated', 'text' => 'text-yellow-400', 'countText' => 'text-white'],
+    'unlimited'  => ['count' => 0, 'label' => 'Ilimitada',  'emoji' => '🚨', 'class' => 'bg-red-700', 'text' => 'text-white']
+];
 
+foreach ($emails as $em) {
+    if ($em['_diskquota'] <= 0) {
+        $emailStats['unlimited']['count']++;
+        continue;
+    }
+    $pct = floatval($em['diskusedpercent'] ?? (($em['_diskused'] / $em['_diskquota']) * 100));
+    
+    if ($pct >= 96) $emailStats['saturated']['count']++;
+    elseif ($pct >= 86) $emailStats['critical']['count']++;
+    elseif ($pct >= 76) $emailStats['warning']['count']++;
+    elseif ($pct >= 61) $emailStats['preventive']['count']++;
+    else $emailStats['healthy']['count']++;
+}
+
+$hasCriticalEmails = ($emailStats['saturated']['count'] > 0 || $emailStats['critical']['count'] > 0 || $emailStats['unlimited']['count'] > 0);
+
+$hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 || $noTraffic || $fwdLoopsCount > 0 || $fwdExternalCount > 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -184,9 +276,23 @@ $hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 ||
         .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0; }
         .progress-bar-bg { background-color: #e2e8f0; border-radius: 9999px; overflow: hidden; height: 12px; }
         .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 0.5s ease; }
-        .status-healthy { background-color: #10b981; } /* Verde */
-        .status-warning { background-color: #f59e0b; } /* Amarillo */
-        .status-critical { background-color: #ef4444; } /* Rojo */
+        
+        .status-healthy { background-color: #10b981; } /* Verde - Saludable */
+        .status-warning-yellow { background-color: #eab308; } /* Amarillo - Preventivo */
+        .status-warning-orange { background-color: #f97316; } /* Naranja - Advertencia */
+        .status-critical { background-color: #ef4444; } /* Rojo - Crítico */
+        .status-saturated { 
+            background-color: #000; 
+            color: #facc15; /* Amarillo para legibilidad sobre negro */
+            box-shadow: 0 0 4px #ef4444;
+        }
+
+        /* BG Helper for mini-bars */
+        .status-healthy-bg { background-color: #10b981; }
+        .status-warning-yellow-bg { background-color: #eab308; }
+        .status-warning-orange-bg { background-color: #f97316; }
+        .status-critical-bg { background-color: #ef4444; }
+        .status-saturated-bg { background-color: #000; }
         
         /* Reglas para la tabla de emails */
         .table-emails th, .table-emails td { padding: 8px 10px; font-size: 13px; line-height: 1.25; }
@@ -199,8 +305,10 @@ $hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 ||
         
         <?php
             function getStatusColor($percent) {
-                if ($percent >= 90) return 'status-critical';
-                if ($percent >= 75) return 'status-warning';
+                if ($percent >= 96) return 'status-saturated';
+                if ($percent >= 86) return 'status-critical';
+                if ($percent >= 76) return 'status-warning-orange';
+                if ($percent >= 61) return 'status-warning-yellow';
                 return 'status-healthy';
             }
         ?>
@@ -237,50 +345,20 @@ $hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 ||
             </div>
         </div>
 
-        <!-- Mensaje de Estado General -->
-        <?php if ($isSuspended): ?>
-        <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-5 mb-8 flex items-start">
-            <svg class="w-6 h-6 text-red-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <!-- Mensaje de Estado General (Política v2.0) -->
+        <div class="<?php echo $currentRecommendation['class']; ?> border rounded-lg p-5 mb-8 flex items-start <?php echo $severity['level'] === 'emergency' ? 'animate-pulse' : ''; ?>">
+            <span class="text-3xl mr-4"><?php echo $currentRecommendation['icon']; ?></span>
             <div>
-                <h3 class="font-bold text-lg">Cuenta Suspendida</h3>
-                <p class="text-red-700 mt-1">Tu cuenta de alojamiento se encuentra actualmente suspendida. Por favor contáctanos lo antes posible.</p>
+                <h3 class="font-bold text-lg"><?php echo $currentRecommendation['title']; ?></h3>
+                <p class="mt-1"><?php echo $currentRecommendation['msg']; ?></p>
+                
+                <?php if ($isCriticalMigration): ?>
+                <div class="mt-4 pt-4 border-t border-current opacity-80 text-sm leading-relaxed">
+                    <p><strong>💡 Recomendación Estratégica:</strong> "Hemos detectado que el éxito de su negocio requiere una infraestructura de correo a nivel empresarial. Les recomendamos migrar la plataforma de correo a una solución profesional tipo Google Workspace o Microsoft 365 para garantizar su continuidad operativa y seguridad."</p>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
-        <?php elseif ($isCriticalMigration): ?>
-        <div class="bg-orange-50 border border-orange-200 text-orange-800 rounded-lg p-5 mb-8 flex items-start">
-            <svg class="w-6 h-6 text-orange-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            <div>
-                <h3 class="font-bold text-lg">Alerta de Migración Sugerida</h3>
-                    <div style="margin-top: 10px;">
-                        <p class="text-orange-800 font-medium">
-                            <strong>Motivo:</strong> Su cuenta ha superado el 80% de su capacidad total, el uso de disco por casilla es mayor a 15 GB, o el volumen de archivos (inodos) ha alcanzado un nivel crítico para el servidor.
-                        </p>
-                        <p style="margin-top:8px; font-weight:normal; font-style:italic; color: #9a3412;">
-                            Esta medida preventiva busca garantizar la integridad de sus datos y evitar bloqueos en el flujo de correos por falta de espacio.
-                        </p>
-                        <p class="text-orange-800 mt-4 leading-relaxed">
-                            "Hemos detectado que el éxito de su negocio requiere una infraestructura de correo a nivel empresarial, ya que actualmente están consumiendo casi la totalidad de su espacio de alojamiento y un alto volumen de archivos (inodes). Les recomendamos mantener su sitio web en su plan actual (mucho más económico y liviano) y migrar la plataforma de correo a una plataforma de correos profesional tipo Google Workspace o Microsoft 365 para garantizar su continuidad operativa y correos seguros."
-                        </p>
-                    </div>
-            </div>
-        </div>
-        <?php elseif ($isHealthy): ?>
-        <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg p-5 mb-8 flex items-start">
-            <svg class="w-6 h-6 text-green-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <div>
-                <h3 class="font-bold text-lg">¡Tu cuenta está en excelente estado!</h3>
-                <p class="text-green-700 mt-1">Actualmente la cuenta está activa y tienes recursos suficientes para que tu sitio web y correos funcionen sin problemas.</p>
-            </div>
-        </div>
-        <?php else: ?>
-        <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-5 mb-8 flex items-start">
-            <svg class="w-6 h-6 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            <div>
-                <h3 class="font-bold text-lg">Atención: Algunos recursos están altos</h3>
-                <p class="text-yellow-700 mt-1">Te recomendamos revisar los indicadores marcados en naranja o rojo. Si están muy llenos, podrías dejar de recibir correos o tu página web podría detenerse.</p>
-            </div>
-        </div>
-        <?php endif; ?>
 
         <!-- Alertas de Mantenimiento / Optimización -->
         <?php if ($hasMaintenanceAlerts && !$isSuspended): ?>
@@ -341,7 +419,7 @@ $hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 ||
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill <?php echo getStatusColor($diskPercent); ?>" style="width: <?php echo $diskPercent; ?>%"></div>
                     </div>
-                    <p class="text-right text-xs font-bold mt-1 text-slate-400"><?php echo $diskPercent; ?>% Lleno</p>
+                    <p class="text-right text-xs font-bold mt-1 text-slate-400"><?php echo $diskPercent; ?>% Lleno <?php echo $severity['code']; ?></p>
                 </div>
 
                 <?php if ($diskPercent >= 80): ?>
@@ -469,7 +547,48 @@ $hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 ||
                 </div>
             </div>
 
+            <!-- Caluga de Resumen de Estados -->
+            <div class="px-6 mb-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <?php foreach ($emailStats as $key => $stat): ?>
+                        <div class="rounded-lg p-3 border <?php echo $stat['class']; ?> shadow-sm flex flex-col items-center justify-center text-center">
+                            <span class="text-xl mb-1"><?php echo $stat['emoji']; ?></span>
+                            <span class="text-[10px] uppercase tracking-wider font-bold <?php echo $stat['text'] ?? 'text-white'; ?>"><?php echo $stat['label']; ?></span>
+                            <span class="text-xl font-black <?php echo $stat['countText'] ?? ($stat['text'] ?? 'text-white'); ?>"><?php echo $stat['count']; ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- Recomendación específica por Saturación/Crítico -->
+            <div class="mx-6 mb-6 bg-slate-900 text-white rounded-xl p-5 border-l-4 border-red-600 shadow-xl">
+                <div class="flex items-center mb-3">
+                    <span class="text-2xl mr-3">🚀</span>
+                    <h4 class="font-bold text-lg uppercase tracking-tight">Plan de Acción de Correo</h4>
+                </div>
+                <div class="space-y-3 text-sm leading-relaxed opacity-95">
+                    <?php 
+                    $unlimitedCount = $emailStats['unlimited']['count'];
+                    
+                    if (!$hasCriticalEmails): ?>
+                        <p>🟢 <strong>ESTADO SALUDABLE:</strong> No se han detectado riesgos operativos críticos en sus casillas actuales. Su equipo puede seguir operando con normalidad.</p>
+                    <?php endif; ?>
+
+                    <?php if ($unlimitedCount > 0): ?>
+                        <p>📢 <strong>RIESGO GLOBAL: <?php echo $unlimitedCount; ?> Cuotas Ilimitadas Detectadas.</strong> Se han identificado casillas sin límite de espacio. Esto representa un riesgo crítico de seguridad y estabilidad, ya que una sola casilla podría saturar todo el servidor. **Recomendamos asignar cuotas finitas (ej. 5GB o 10GB) de inmediato.**</p>
+                    <?php endif; ?>
+
+                    <?php if ($emailStats['saturated']['count'] > 0): ?>
+                        <p>⚠️ Se han detectado <strong><?php echo $emailStats['saturated']['count']; ?> casillas saturadas</strong> (96%+). Estas cuentas están en riesgo inminente de dejar de recibir correos externos o presentar lentitud extrema. Se recomienda limpieza inmediata o aumento de cuota.</p>
+                    <?php endif; ?>
+                    <?php if ($emailStats['critical']['count'] > 0): ?>
+                        <p>🔴 Hay <strong><?php echo $emailStats['critical']['count']; ?> casillas en estado crítico</strong> (86%-95%). El margen operativo es mínimo. Recomendamos migrar el historial de correos a archivos locales o evaluar plataformas profesionales como GWS o M365.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
             <?php if (count($emails) > 0): ?>
+            <div class="overflow-x-auto px-6">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse table-emails">
                     <thead>
@@ -478,6 +597,7 @@ $hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 ||
                             <th class="p-3 border-b">Casilla (Email)</th>
                             <th class="p-3 border-b text-center">Reenvíos</th>
                             <th class="p-3 border-b">Uso Disco</th>
+                            <th class="p-3 border-b">Cuota</th>
                             <th class="p-3 border-b">% Uso</th>
                             <th class="p-3 border-b">Último Acceso</th>
                             <th class="p-3 border-b text-center">Login</th>
@@ -489,7 +609,17 @@ $hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 ||
                             $idx = 1;
                             foreach ($emails as $em): 
                             $emUsed = floatval($em['_diskused'] ?? 0);
-                            $pctTotal = $totalEmailDiskBytes > 0 ? min(100, round(($emUsed / $totalEmailDiskBytes) * 100, 2)) : 0;
+                            $emQuotaBytes = floatval($em['_diskquota'] ?? 0);
+                            $isUnlimited = ($emQuotaBytes <= 0);
+                            
+                            // Priorizar el porcentaje que viene directo de la API (UAPI diskusedpercent)
+                            if ($isUnlimited) {
+                                $pctUsage = 100; // Forzar rojo/alarma
+                            } elseif (isset($em['diskusedpercent']) && is_numeric($em['diskusedpercent'])) {
+                                $pctUsage = floatval($em['diskusedpercent']);
+                            } else {
+                                $pctUsage = ($emQuotaBytes > 0) ? min(100, round(($emUsed / $emQuotaBytes) * 100, 2)) : 0;
+                            }
                             
                             $mtime = intval($em['mtime'] ?? 0);
                             $daysAgo = $mtime > 0 ? floor((time() - $mtime) / (24 * 3600)) : null;
@@ -503,16 +633,18 @@ $hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 ||
                             <td class="p-3 text-center text-slate-400 font-mono text-xs"><?php echo $idx++; ?></td>
                             <td class="p-3 font-medium text-slate-800 break-email">
                                 <?php 
-                                    $emailName = $em['email'] ?? '';
-                                    if (strpos($emailName, '@') === false) {
-                                        $emailName .= '@' . ($em['domain'] ?? '');
+                                    $emailFull = $em['email'] ?? '';
+                                    if (strpos($emailFull, '@') === false) {
+                                        $emailFull .= '@' . ($em['domain'] ?? '');
                                     }
-                                    echo htmlspecialchars($emailName); 
+                                    $parts = explode('@', $emailFull);
+                                    echo '<div class="font-bold text-slate-800">' . htmlspecialchars($parts[0]) . '</div>';
+                                    echo '<div class="text-[10px] text-slate-400 font-normal mt-0.5">@' . htmlspecialchars($parts[1] ?? '') . '</div>';
                                 ?>
                             </td>
                             <td class="p-3 text-center">
                                 <?php 
-                                    $fCount = $fwdCounts[$emailName] ?? 0;
+                                    $fCount = $fwdCounts[$emailFull] ?? 0;
                                     if ($fCount > 0): 
                                 ?>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-700">
@@ -523,12 +655,20 @@ $hasMaintenanceAlerts = $suspendedEmailsCount > 0 || $inactiveEmailsCount > 0 ||
                                 <?php endif; ?>
                             </td>
                             <td class="p-3 text-slate-600"><?php echo formatBytesCustom($emUsed); ?></td>
-                            <td class="p-3 text-slate-600">
+                            <td class="p-3">
+                                <?php if ($isUnlimited): ?>
+                                    <span class="text-red-600 font-black tracking-widest">ILIMITADA</span>
+                                <?php else: ?>
+                                    <span class="text-slate-700 font-bold"><?php echo formatBytesCustom($emQuotaBytes); ?></span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="p-3">
                                 <div class="flex items-center">
-                                    <span class="mr-2 w-10 text-right"><?php echo number_format($pctTotal, 2, ',', '.'); ?>%</span>
+                                    <span class="font-black text-xs w-12 <?php echo $isUnlimited ? 'text-red-600' : 'text-slate-500'; ?>"><?php echo $isUnlimited ? 'ALERTA' : number_format($pctUsage, 1, ',', '.') . '%'; ?></span>
                                     <div class="w-16 bg-slate-200 rounded-full h-1.5 hidden md:block">
-                                        <div class="bg-blue-500 rounded-full h-1.5" style="width: <?php echo $pctTotal; ?>%"></div>
+                                        <div class="rounded-full h-1.5 <?php echo getStatusColor($pctUsage); ?>-bg" style="width: <?php echo $pctUsage; ?>%"></div>
                                     </div>
+                                    <span class="ml-2"><?php echo ($isUnlimited || $emQuotaBytes > 0) ? (getStatusColor($pctUsage) === 'status-saturated' ? '🚨' : (getStatusColor($pctUsage) === 'status-critical' ? '🔴' : '')) : ''; ?></span>
                                 </div>
                             </td>
                             <td class="p-3 <?php echo $loginColorClass; ?>"><?php echo $lastLoginStr; ?></td>

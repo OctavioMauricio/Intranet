@@ -1172,3 +1172,48 @@ tbody td {
 .reseller-usage-fill.danger {
     background: var(--danger);
 }
+
+/* ---- SEVERITY ROWS ---- */
+.table-severity-emergency {
+    background: rgba(225, 29, 72, 0.12) !important;
+}
+.table-severity-emergency:hover {
+    background: rgba(225, 29, 72, 0.2) !important;
+}
+
+.table-severity-critical {
+    background: rgba(255, 68, 102, 0.08) !important;
+}
+.table-severity-critical:hover {
+    background: rgba(255, 68, 102, 0.15) !important;
+}
+
+.table-severity-high {
+    background: rgba(255, 119, 0, 0.06) !important;
+}
+.table-severity-high:hover {
+    background: rgba(255, 119, 0, 0.12) !important;
+}
+
+.table-severity-preventive {
+    background: rgba(255, 176, 32, 0.04) !important;
+}
+.table-severity-preventive:hover {
+    background: rgba(255, 176, 32, 0.08) !important;
+}
+
+/* Saturated Blinking */
+.disk-bar-fill.emergency, .mini-bar-fill.emergency {
+    animation: pulse-bg-saturated 1s infinite alternate;
+}
+
+@keyframes pulse-bg-saturated {
+    0% {
+        background-color: var(--emergency);
+        box-shadow: 0 0 5px var(--emergency);
+    }
+    100% {
+        background-color: #000;
+        box-shadow: 0 0 10px var(--danger);
+    }
+}

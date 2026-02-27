@@ -152,6 +152,25 @@ const App = {
     },
 
     // ---- RENDER ----
+    getUsageSeverity(percent, type = 'hosting') {
+        const p = parseFloat(percent) || 0;
+
+        // 1. SATURADO (96-100%+)
+        if (p >= 96) return { level: 'emergency', class: 'emergency', label: 'Saturado', code: '🚨', emoji: '⚫' };
+
+        // 2. CRÍTICO (86-95%)
+        if (p >= 86) return { level: 'critical', class: 'red', label: 'Crítico', code: '🔴', emoji: '🔴' };
+
+        // 3. ADVERTENCIA (76-85%)
+        if (p >= 76) return { level: 'high', class: 'orange', label: 'Advertencia', code: '🟠', emoji: '🟠' };
+
+        // 4. PREVENTIVO (61-75%)
+        if (p >= 61) return { level: 'preventive', class: 'yellow', label: 'Preventivo', code: '🟡', emoji: '🟡' };
+
+        // 5. SALUDABLE (0-60%)
+        return { level: 'info', class: 'green', label: 'Saludable', code: '🟢', emoji: '🟢' };
+    },
+
     render() {
         if (!this.data) return;
         this.renderSummary();
@@ -181,22 +200,9 @@ const App = {
         diskCard.classList.remove('purple', 'green', 'yellow', 'orange', 'red', 'emergency');
         diskUsedEl.className = 'card-value';
 
-        if (s.disk_percent >= 95) {
-            diskCard.classList.add('emergency');
-            diskUsedEl.classList.add('emergency');
-        } else if (s.disk_percent >= 90) {
-            diskCard.classList.add('red');
-            diskUsedEl.classList.add('red');
-        } else if (s.disk_percent >= 85) {
-            diskCard.classList.add('orange');
-            diskUsedEl.classList.add('orange');
-        } else if (s.disk_percent >= 75) {
-            diskCard.classList.add('yellow');
-            diskUsedEl.classList.add('yellow');
-        } else {
-            diskCard.classList.add('green');
-            diskUsedEl.classList.add('green');
-        }
+        const sev = this.getUsageSeverity(s.disk_percent);
+        diskCard.classList.add(sev.class);
+        diskUsedEl.classList.add(sev.class);
 
         // Contar inactivas (sin bandwidth / poco movimiento)
         const inactive = this.data.accounts.filter(a => a.bw_used < 1024 && !a.suspended).length;
@@ -208,12 +214,9 @@ const App = {
         const bar = document.getElementById('diskBarFill');
         const stats = document.getElementById('diskBarStats');
 
+        const sev = this.getUsageSeverity(s.disk_percent);
         bar.style.width = Math.min(s.disk_percent, 100) + '%';
-        bar.className = 'disk-bar-fill';
-        if (s.disk_percent >= 95) bar.classList.add('emergency');
-        else if (s.disk_percent >= 90) bar.classList.add('danger');
-        else if (s.disk_percent >= 85) bar.classList.add('orange');
-        else if (s.disk_percent >= 75) bar.classList.add('warning');
+        bar.className = 'disk-bar-fill ' + (sev.class === 'red' ? 'danger' : (sev.class === 'yellow' ? 'warning' : sev.class));
 
         stats.textContent = `${s.total_disk_used_hr} / ${s.total_disk_limit_hr} (${this.formatPercent(s.disk_percent)}%)`;
     },
@@ -421,13 +424,10 @@ const App = {
         const container = document.getElementById('alertsTable');
         if (!container) return;
 
-        // Criterios de Alerta: Uso Disco > 80% o Uso Disco por casilla > 15GB
-        const CRITICAL_PERCENT = 80;
-        const CRITICAL_MAILBOX_BYTES = 15 * 1024 * 1024 * 1024;
-
+        // Criterios de Alerta: Uso Disco > 75% o Uso Disco por casilla > 15GB (Política v2.0)
         let alerts = this.data.accounts.filter(acct => {
-            // Cuentas con riesgo real o crítico según Política TNA (🟠, 🔴, 🚨)
-            return !acct.suspended && ['high', 'critical', 'emergency'].includes(acct.severity?.level);
+            // Cuentas con riesgo real o crítico (🟡, 🟠, 🔴, 🚨)
+            return !acct.suspended && ['preventive', 'high', 'critical', 'emergency'].includes(acct.severity?.level);
         });
 
         // Ordenar por espacio ocupado (descendente)
@@ -435,32 +435,35 @@ const App = {
 
         const badge = document.getElementById('alertCount');
         if (badge) {
-            badge.textContent = alerts.length + ' cuentas críticas';
+            badge.textContent = alerts.length + ' cuentas con alerta';
             if (alerts.length > 0) {
-                badge.style.background = 'var(--danger,#ef4444)';
-                badge.classList.add('pulse'); // Optionally add an animation class
+                const mostSevere = alerts.some(a => a.severity.level === 'emergency') ? 'emergency' :
+                    alerts.some(a => a.severity.level === 'critical') ? 'red' : 'warning';
+                badge.style.background = `var(--${mostSevere === 'danger' ? 'danger' : mostSevere})`;
+                badge.classList.add('pulse');
             } else {
                 badge.style.background = 'var(--success,#22c55e)';
             }
         }
 
         if (alerts.length === 0) {
-            container.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px;">🎉 Excelente. No hay cuentas con alertas críticas de migración actualmente.</td></tr>';
+            container.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px;">🎉 Excelente. No hay cuentas con alertas preventivas o críticas actualmente.</td></tr>';
             return;
         }
 
         container.innerHTML = alerts.map(acct => {
-            const barClass = acct.severity?.class || 'green';
+            const sev = acct.severity || this.getUsageSeverity(acct.disk_percent);
+            const barClass = sev.class || 'green';
             return `
-                <tr class="table-severity-${acct.severity?.level || 'none'}">
+                <tr class="table-severity-${sev.level || 'none'}">
                     <td onclick="App.showDetail('${acct.user}')" style="cursor:pointer"><span class="td-user">${acct.user}</span></td>
                     <td class="td-domain" onclick="App.showDetail('${acct.user}')" style="cursor:pointer">${acct.domain}</td>
-                    <td class="td-mono text-danger fw-bold" onclick="App.showDetail('${acct.user}')" style="cursor:pointer">${acct.disk_used_hr}</td>
+                    <td class="td-mono ${sev.level === 'emergency' || sev.level === 'critical' ? 'text-danger fw-bold' : ''}" onclick="App.showDetail('${acct.user}')" style="cursor:pointer">${acct.disk_used_hr}</td>
                     <td onclick="App.showDetail('${acct.user}')" style="cursor:pointer" style="min-width: 60px;">
                         <span class="mini-bar"><span class="mini-bar-fill ${barClass}" style="width:${acct.disk_limit > 0 ? Math.min(acct.disk_percent, 100) : (acct.disk_used > 1024 * 1024 * 1024 ? 100 : 0)}%"></span></span>
                         <div style="font-size:10px;text-align:right;margin-top:2px;">
                             ${acct.disk_limit > 0 ? this.formatPercent(acct.disk_percent) + '%' : '<span class="text-danger">Ilimitado</span>'} 
-                            ${acct.severity?.code || ''}
+                            ${sev.code || ''}
                         </div>
                     </td>
                     <td class="td-mono" onclick="App.showDetail('${acct.user}')" style="cursor:pointer">${acct.disk_limit_hr}</td>
@@ -1169,7 +1172,8 @@ const App = {
             var used = parseFloat(e._diskused || e.diskused || 0);
             var quota = parseFloat(e.diskquota || 0);
             var pct = (quota > 0) ? Math.min(Math.round((used / quota) * 100), 100) : 0;
-            var barColor = pct > 85 ? 'red' : pct > 70 ? 'yellow' : 'green';
+            var emailSev = this.getUsageSeverity(pct, 'email');
+            var barColor = emailSev.class === 'red' ? 'danger' : (emailSev.class === 'yellow' ? 'warning' : emailSev.class);
             var barHtml = (quota > 0) ? '<span class="mini-bar"><span class="mini-bar-fill ' + barColor + '" style="width:' + pct + '%"></span></span>' : '';
 
             // Último acceso (mtime)
@@ -1270,7 +1274,7 @@ const App = {
                 '<td class="td-mono">' + (e.email || e.login || 'N/A') + statusHtml + fwdIndicator + '</td>' +
                 '<td class="td-mono">' + (e.humandiskused || '0') + ' ' + barHtml + '</td>' +
                 '<td class="td-mono">' + displayQuota + '</td>' +
-                '<td class="td-mono">' + this.formatNumber(e.diskusedpercent || 0) + '%</td>' +
+                '<td class="td-mono">' + (emailSev.code || '') + ' ' + this.formatNumber(e.diskusedpercent || 0) + '%</td>' +
                 fwdCell +
                 '<td style="white-space:nowrap">' +
                 (isLoginSuspended ? '<span class="badge badge-suspended">🔒 Suspendido</span>' : '<span class="badge badge-active">🔓 Activo</span>') +
