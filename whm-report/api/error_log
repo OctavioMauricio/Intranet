@@ -1,0 +1,90 @@
+[26-Feb-2026 00:19:12 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method WhmApi::countDatabases() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:732
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 732
+[26-Feb-2026 00:19:25 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method WhmApi::countDatabases() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:732
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 732
+[26-Feb-2026 00:19:27 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method WhmApi::countDatabases() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:732
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 732
+[26-Feb-2026 00:19:44 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method WhmApi::countDatabases() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:732
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 732
+[26-Feb-2026 00:23:09 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method WhmApi::countDatabases() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:732
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 732
+[26-Feb-2026 00:23:17 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method WhmApi::countDatabases() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:732
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 732
+[26-Feb-2026 02:38:35 America/Santiago] PHP Fatal error:  Uncaught Error: Call to private method WhmApi::parseSize() from context '' in /home/icontel/public_html/intranet/whm-report/api/index.php:65
+Stack trace:
+#0 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/api/index.php on line 65
+[26-Feb-2026 02:39:11 America/Santiago] PHP Fatal error:  Uncaught Error: Call to private method WhmApi::parseSize() from context '' in /home/icontel/public_html/intranet/whm-report/api/index.php:65
+Stack trace:
+#0 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/api/index.php on line 65
+[26-Feb-2026 19:23:11 UTC] PHP Parse error:  syntax error, unexpected 'case' (T_CASE) in /home/icontel/public_html/intranet/whm-report/api/index.php on line 102
+[26-Feb-2026 19:23:11 UTC] PHP Parse error:  syntax error, unexpected 'case' (T_CASE) in /home/icontel/public_html/intranet/whm-report/api/index.php on line 102
+[26-Feb-2026 19:33:40 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874
+[26-Feb-2026 19:34:23 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874
+[26-Feb-2026 19:34:31 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874
+[26-Feb-2026 19:36:02 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874
+[26-Feb-2026 19:37:20 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874
+[26-Feb-2026 19:37:23 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874
+[26-Feb-2026 19:37:28 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874
+[26-Feb-2026 19:38:36 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874
+[26-Feb-2026 19:39:32 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874
+[26-Feb-2026 19:40:27 America/Santiago] PHP Fatal error:  Uncaught TypeError: Unsupported operand types: int / string in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php:874
+Stack trace:
+#0 /home/icontel/public_html/intranet/whm-report/api/index.php(33): WhmApi->getFullReport()
+#1 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 874

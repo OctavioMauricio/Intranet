@@ -1,0 +1,29 @@
+[25-Feb-2026 21:56:58 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method WhmApi::getEmails() in /home/icontel/public_html/intranet/whm-report/test_quota.php:26
+Stack trace:
+#0 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/test_quota.php on line 26
+[25-Feb-2026 22:07:29 America/Santiago] PHP Fatal error:  Uncaught Error: Call to private method WhmApi::callUapi() from context '' in /home/icontel/public_html/intranet/whm-report/check_maxpop.php:6
+Stack trace:
+#0 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/check_maxpop.php on line 6
+[25-Feb-2026 22:07:50 America/Santiago] PHP Fatal error:  Uncaught Error: Call to private method WhmApi::callUapi() from context '' in /home/icontel/public_html/intranet/whm-report/check_maxpop.php:6
+Stack trace:
+#0 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/check_maxpop.php on line 6
+[25-Feb-2026 22:44:36 America/Santiago] PHP Fatal error:  Uncaught Error: Call to private method WhmApi::call() from context '' in /home/icontel/public_html/intranet/whm-report/test_csf_api.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/test_csf_api.php on line 8
+[25-Feb-2026 22:45:12 America/Santiago] PHP Fatal error:  Uncaught Error: Call to private method WhmApi::call() from context '' in /home/icontel/public_html/intranet/whm-report/test_csf_api.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/test_csf_api.php on line 11
+[25-Feb-2026 22:46:22 America/Santiago] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/icontel/public_html/intranet/whm-report/debug_applist.php:5) in /home/icontel/public_html/intranet/whm-report/debug_applist.php on line 7
+[25-Feb-2026 22:46:55 America/Santiago] PHP Fatal error:  Uncaught Error: Call to private method WhmApi::callUapi() from context '' in /home/icontel/public_html/intranet/whm-report/test_csf_api.php:35
+Stack trace:
+#0 {main}
+  thrown in /home/icontel/public_html/intranet/whm-report/test_csf_api.php on line 35
+[26-Feb-2026 02:00:39 America/Santiago] PHP Warning:  Invalid argument supplied for foreach() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 978
+[26-Feb-2026 02:07:00 America/Santiago] PHP Warning:  Invalid argument supplied for foreach() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 978
+[26-Feb-2026 02:07:49 America/Santiago] PHP Warning:  Invalid argument supplied for foreach() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 978
+[26-Feb-2026 02:09:06 America/Santiago] PHP Warning:  Invalid argument supplied for foreach() in /home/icontel/public_html/intranet/whm-report/includes/WhmApi.php on line 978

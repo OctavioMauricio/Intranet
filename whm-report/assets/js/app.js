@@ -1168,30 +1168,9 @@ const App = {
             var rowIdx = start + i;
             var used = parseFloat(e._diskused || e.diskused || 0);
             var quota = parseFloat(e.diskquota || 0);
-            var pctFloat = parseFloat(e.diskusedpercent_float || e.diskusedpercent || 0);
-            var pct = Math.round(pctFloat);
-
-            // Política de colores:
-            // 0-69%   🟢 Normal    (green)
-            // 70-84%  🟡 Preventivo(yellow)
-            // 85-94%  🟠 Alto      (orange)
-            // 95-99%  🔴 Crítico   (red)
-            // 100%    ⛔ Bloqueo   (darkred)
-            var barColor = 'green';
-            if (pct >= 100) barColor = 'darkred';
-            else if (pct >= 95) barColor = 'red';
-            else if (pct >= 85) barColor = 'orange'; // var(--orange) needs to be mapped to a color or CSS class
-            else if (pct >= 70) barColor = 'yellow';
-
-            var barHtml = (quota > 0) ? '<span class="mini-bar"><span class="mini-bar-fill ' + barColor + '" style="width:' + Math.min(pctFloat, 100) + '%"></span></span>' : '';
-
-            // Construir celda de porcentaje con GB usados
-            var pctCellText = '';
-            if (displayQuota !== '<span class="text-danger">Ilimitado</span>' && displayQuota !== 'Ilimitado') {
-                pctCellText = '<strong style="color:var(--text-primary)">' + (e.humandiskused || '0') + ' de ' + displayQuota + '</strong> <span style="color:var(--text-muted);font-size:11px">(' + pct + '%)</span>';
-            } else {
-                pctCellText = '<strong style="color:var(--text-primary)">' + (e.humandiskused || '0') + '</strong> <span style="color:var(--text-muted);font-size:11px">(' + pct + '%)</span>';
-            }
+            var pct = (quota > 0) ? Math.min(Math.round((used / quota) * 100), 100) : 0;
+            var barColor = pct > 85 ? 'red' : pct > 70 ? 'yellow' : 'green';
+            var barHtml = (quota > 0) ? '<span class="mini-bar"><span class="mini-bar-fill ' + barColor + '" style="width:' + pct + '%"></span></span>' : '';
 
             // Último acceso (mtime)
             var lastDateStr = 'Sin registro';
@@ -1289,7 +1268,9 @@ const App = {
                 '<tr id="emailrow-' + rowIdx + '">' +
                 '<td style="color:var(--text-muted);font-size:11px;font-family:var(--font-mono);text-align:center;width:36px">' + this.formatNumber(start + i + 1) + '</td>' +
                 '<td class="td-mono">' + (e.email || e.login || 'N/A') + statusHtml + fwdIndicator + '</td>' +
-                '<td class="td-mono">' + pctCellText + '<div style="margin-top:4px; max-width: 150px;">' + barHtml + '</div></td>' +
+                '<td class="td-mono">' + (e.humandiskused || '0') + ' ' + barHtml + '</td>' +
+                '<td class="td-mono">' + displayQuota + '</td>' +
+                '<td class="td-mono">' + this.formatNumber(e.diskusedpercent || 0) + '%</td>' +
                 fwdCell +
                 '<td style="white-space:nowrap">' +
                 (isLoginSuspended ? '<span class="badge badge-suspended">🔒 Suspendido</span>' : '<span class="badge badge-active">🔓 Activo</span>') +
